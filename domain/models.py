@@ -6,16 +6,9 @@ Created on Thu Sep  4 10:26:05 2025
 """
 
 
-from sqlalchemy import Column, Integer, Float, String, UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
-
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, Float, String, UniqueConstraint, ForeignKey
 from sqlalchemy.orm import relationship
-
-Base = declarative_base()
+from infrastructure.db import Base
 
 class Cliente(Base):
     __tablename__ = "clientes"

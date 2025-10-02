@@ -4,7 +4,7 @@ Created on Thu Sep  4 10:29:18 2025
 
 @author: backy
 """
-
+from typing import List
 from fastapi import FastAPI, Path, Body, Query
 from domain.models import Tarifa, TarifaBaseDB, TarifaDB
 from use_cases.actualizar_tarifa import ActualizarTarifaUseCase
@@ -234,14 +234,10 @@ def disponibilidad_por_fecha(
 
     return resultado
 
-from fastapi import FastAPI
+
+
 from domain.schemas import TarifaExportada
-from infrastructure.tarifa_repository import TarifaRepository
-from fastapi.responses import JSONResponse
-
-
-
-@app.get("/tarifas_export/{propiedad_id}", response_model=list[TarifaExportada])
+@app.get("/tarifas_export/{propiedad_id}", response_model=List[TarifaExportada])
 def tarifas_export(propiedad_id: int):
     repo = TarifaRepository()
     tarifas = repo.exportar_tarifas(propiedad_id)
@@ -252,7 +248,13 @@ def tarifas_export(propiedad_id: int):
             content={"estado": "error", "mensaje": "No se encontraron tarifas para esta propiedad"}
         )
 
-    return tarifas
+    return [TarifaExportada(
+    propiedad_id=t.propiedad_id,
+    categoria_id=t.categoria_id,
+    fecha=t.fecha,
+    precio=t.precio,
+    disponibilidad=t.disponibilidad
+) for t in tarifas]
 
 from domain.schemas import ClienteInput
 from domain.models import ClienteDB
@@ -295,3 +297,7 @@ def crear_propiedad(propiedad: PropiedadInput):
     db.close()
 
     return {"estado": "ok", "propiedad_id": nueva_propiedad.id}
+
+@app.get("/")
+def root():
+    return {"status": "Backend activo"}
