@@ -15,7 +15,13 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from domain.schemas import ResumenCategoria
 
+
 app = FastAPI()
+
+@app.get("/")
+def root():
+    return {"status": "Backend activo"}
+
 
 class TarifaBaseInput(BaseModel):
     propiedad_id: int
