@@ -4,17 +4,21 @@ Created on Thu Sep  4 10:29:18 2025
 
 @author: backy
 """
-from typing import List
 from fastapi import FastAPI, Path, Body, Query
-from domain.models import Tarifa, TarifaBase,TarifaBaseDB, TarifaDB
+from fastapi.responses import JSONResponse
+from typing import List
+from datetime import date
+
+from domain.models import Tarifa, TarifaBase, ClienteDB, PropiedadDB, Cliente, Propiedad
+from domain.schemas import (
+    TarifaInput, TarifaOut, TarifaBaseInput, TarifaBaseOut,
+    ClienteInput, PropiedadInput,
+    ResumenCategoria, DisponibilidadPorFecha, TarifaExportada
+)
 from use_cases.actualizar_tarifa import ActualizarTarifaUseCase
+from infrastructure.db import SessionLocal
 from infrastructure.tarifa_repository import TarifaRepository
 from infrastructure.portal_gateway import PortalGateway
-from infrastructure.db import SessionLocal
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
-from domain.schemas import ResumenCategoria
-from domain.schemas import TarifaOut
 
 app = FastAPI()
 
@@ -22,16 +26,66 @@ app = FastAPI()
 def root():
     return {"status": "Backend activo"}
 
+@app.get("/healthcheck")
+def healthcheck():
+    db = SessionLocal()
+    try:
+        count = db.query(TarifaBase).count()
+        return {"tarifa_base_count": count}
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
-class TarifaBaseInput(BaseModel):
-    propiedad_id: int
-    precio_base: float = Field(gt=0, description="La tarifa base debe ser mayor a cero")
+@app.get("/healthcheck/tarifas")
+def healthcheck_tarifas():
+    db = SessionLocal()
+    try:
+        count = db.query(Tarifa).count()
+        return {"tarifas_count": count}
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.get("/healthcheck/clientes")
+def healthcheck_clientes():
+    db = SessionLocal()
+    try:
+        count = db.query(Cliente).count()
+        return {"clientes_count": count}
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.get("/healthcheck/propiedades")
+def healthcheck_propiedades():
+    db = SessionLocal()
+    try:
+        count = db.query(Propiedad).count()
+        return {"propiedades_count": count}
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.post("/api/clientes")
+def crear_cliente(cliente: ClienteInput):
+    db = SessionLocal()
+    nuevo_cliente = ClienteDB(**cliente.dict())
+    db.add(nuevo_cliente)
+    db.commit()
+    db.refresh(nuevo_cliente)
+    db.close()
+    return {"estado": "ok", "cliente_id": nuevo_cliente.id}
+
+@app.post("/api/propiedades")
+def crear_propiedad(propiedad: PropiedadInput):
+    db = SessionLocal()
+    nueva_propiedad = PropiedadDB(**propiedad.dict())
+    db.add(nueva_propiedad)
+    db.commit()
+    db.refresh(nueva_propiedad)
+    db.close()
+    return {"estado": "ok", "propiedad_id": nueva_propiedad.id}
 
 @app.post("/api/tarifa_base")
 def cargar_tarifa_base(tarifa_base: TarifaBaseInput):
     db = SessionLocal()
     existente = db.query(TarifaBase).filter_by(propiedad_id=tarifa_base.propiedad_id).first()
-
     if existente:
         existente.precio_base = tarifa_base.precio_base
         db.commit()
@@ -39,10 +93,7 @@ def cargar_tarifa_base(tarifa_base: TarifaBaseInput):
         db.close()
         return {"estado": "ok", "mensaje": "Tarifa base actualizada"}
     else:
-        nueva_base = TarifaBaseDB(
-            propiedad_id=tarifa_base.propiedad_id,
-            precio_base=tarifa_base.precio_base
-        )
+        nueva_base = TarifaBase(**tarifa_base.dict())
         db.add(nueva_base)
         db.commit()
         db.refresh(nueva_base)
@@ -50,25 +101,19 @@ def cargar_tarifa_base(tarifa_base: TarifaBaseInput):
         return {"estado": "ok", "mensaje": "Tarifa base creada"}
 
 @app.post("/actualizar_tarifa")
-def actualizar_tarifa(tarifa: Tarifa):
+def actualizar_tarifa(tarifa: TarifaInput):
     db = SessionLocal()
-
-    # Validación de duplicados por propiedad, categoría y fecha
     existente = db.query(Tarifa).filter_by(
         propiedad_id=tarifa.propiedad_id,
         categoria_id=tarifa.categoria_id,
         fecha=tarifa.fecha
     ).first()
-
+    db.close()
     if existente:
-        db.close()
         return JSONResponse(status_code=400, content={
             "estado": "error",
             "mensaje": "Ya existe una tarifa para esta propiedad, categoría y fecha"
         })
-
-    db.close()
-
     use_case = ActualizarTarifaUseCase(
         repository=TarifaRepository(),
         gateway=PortalGateway()
@@ -79,7 +124,6 @@ def actualizar_tarifa(tarifa: Tarifa):
     except ValueError as e:
         return JSONResponse(status_code=400, content={"estado": "error", "mensaje": str(e)})
 
-
 @app.get("/tarifas", response_model=List[TarifaOut])
 def obtener_tarifas(
     propiedad_id: int = Query(default=None),
@@ -88,32 +132,23 @@ def obtener_tarifas(
 ):
     db = SessionLocal()
     query = db.query(Tarifa)
-
     if propiedad_id is not None:
         query = query.filter(Tarifa.propiedad_id == propiedad_id)
     if categoria_id is not None:
         query = query.filter(Tarifa.categoria_id == categoria_id)
     if fecha is not None:
         query = query.filter(Tarifa.fecha == fecha)
-
     tarifas = query.all()
     db.close()
+    return tarifas
 
-    return tarifas  # FastAPI convierte automáticamente usando TarifaOut
-
-
-@app.get("/tarifa_base/{propiedad_id}")
+@app.get("/tarifa_base/{propiedad_id}", response_model=TarifaBaseOut)
 def obtener_tarifa_base(propiedad_id: int):
     db = SessionLocal()
     tarifa_base = db.query(TarifaBase).filter_by(propiedad_id=propiedad_id).first()
     db.close()
-
     if tarifa_base:
-        return {
-            "estado": "ok",
-            "propiedad_id": tarifa_base.propiedad_id,
-            "precio_base": tarifa_base.precio_base
-        }
+        return tarifa_base
     else:
         return JSONResponse(status_code=404, content={
             "estado": "error",
@@ -124,35 +159,27 @@ def obtener_tarifa_base(propiedad_id: int):
 def eliminar_tarifa(id: int):
     db = SessionLocal()
     tarifa = db.query(Tarifa).filter_by(id=id).first()
-
     if not tarifa:
         db.close()
         return JSONResponse(status_code=404, content={
             "estado": "error",
             "mensaje": f"No se encontró tarifa con ID {id}"
         })
-
     db.delete(tarifa)
     db.commit()
     db.close()
-
     return {"estado": "ok", "mensaje": f"Tarifa con ID {id} eliminada correctamente"}
 
 @app.put("/tarifa/{id}")
-def editar_tarifa(
-    id: int = Path(..., description="ID de la tarifa a modificar"),
-    tarifa_actualizada: Tarifa = Body(...)
-):
+def editar_tarifa(id: int, tarifa_actualizada: TarifaInput):
     db = SessionLocal()
     tarifa = db.query(Tarifa).filter_by(id=id).first()
-
     if not tarifa:
         db.close()
         return JSONResponse(status_code=404, content={
             "estado": "error",
             "mensaje": f"No se encontró tarifa con ID {id}"
         })
-
     tarifa_base = db.query(TarifaBase).filter_by(propiedad_id=tarifa_actualizada.propiedad_id).first()
     if not tarifa_base or tarifa_base.precio_base <= 0:
         db.close()
@@ -166,17 +193,11 @@ def editar_tarifa(
             "estado": "error",
             "mensaje": f"La tarifa no puede ser menor que la tarifa base de {tarifa_base.precio_base}"
         })
-
-    tarifa.propiedad_id = tarifa_actualizada.propiedad_id
-    tarifa.categoria_id = tarifa_actualizada.categoria_id
-    tarifa.fecha = tarifa_actualizada.fecha
-    tarifa.precio = tarifa_actualizada.precio
-    tarifa.disponibilidad = tarifa_actualizada.disponibilidad
-
+    for field, value in tarifa_actualizada.dict().items():
+        setattr(tarifa, field, value)
     db.commit()
     db.refresh(tarifa)
     db.close()
-
     return {"estado": "ok", "mensaje": f"Tarifa con ID {id} actualizada correctamente"}
 
 @app.get("/resumen_tarifas/{propiedad_id}")
@@ -184,17 +205,14 @@ def resumen_tarifas(propiedad_id: int):
     db = SessionLocal()
     tarifas = db.query(Tarifa).filter_by(propiedad_id=propiedad_id).all()
     db.close()
-
     if not tarifas:
         return JSONResponse(status_code=404, content={
             "estado": "error",
             "mensaje": f"No se encontraron tarifas para la propiedad {propiedad_id}"
         })
-
     total_tarifas = len(tarifas)
     promedio_precio = sum(t.precio for t in tarifas) / total_tarifas
     disponibilidad_total = sum(t.disponibilidad for t in tarifas)
-
     return {
         "estado": "ok",
         "propiedad_id": propiedad_id,
@@ -203,7 +221,7 @@ def resumen_tarifas(propiedad_id: int):
         "disponibilidad_total": disponibilidad_total
     }
 
-@app.get("/resumen_por_categoria/{propiedad_id}", response_model=list[ResumenCategoria])
+@app.get("/resumen_por_categoria/{propiedad_id}", response_model=List[ResumenCategoria])
 def resumen_por_categoria(propiedad_id: int):
     repo = TarifaRepository()
     resumen = repo.resumen_por_categoria(propiedad_id)
@@ -215,135 +233,3 @@ def resumen_por_categoria(propiedad_id: int):
         )
 
     return resumen
-
-
-from domain.schemas import DisponibilidadPorFecha
-from datetime import date
-from fastapi import Query
-
-@app.get("/disponibilidad_por_fecha/{propiedad_id}", response_model=list[DisponibilidadPorFecha])
-def disponibilidad_por_fecha(
-    propiedad_id: int,
-    desde: date = Query(..., description="Fecha de inicio"),
-    hasta: date = Query(..., description="Fecha de fin")
-):
-    repo = TarifaRepository()
-    resultado = repo.disponibilidad_por_fecha(propiedad_id, desde, hasta)
-
-    if not resultado:
-        return JSONResponse(
-            status_code=404,
-            content={"estado": "error", "mensaje": "No se encontraron tarifas en ese rango"}
-        )
-
-    return resultado
-
-
-
-from domain.schemas import TarifaExportada
-@app.get("/tarifas_export/{propiedad_id}", response_model=List[TarifaExportada])
-def tarifas_export(propiedad_id: int):
-    repo = TarifaRepository()
-    tarifas = repo.exportar_tarifas(propiedad_id)
-
-    if not tarifas:
-        return JSONResponse(
-            status_code=404,
-            content={"estado": "error", "mensaje": "No se encontraron tarifas para esta propiedad"}
-        )
-
-    return [TarifaExportada(
-    propiedad_id=t.propiedad_id,
-    categoria_id=t.categoria_id,
-    fecha=t.fecha,
-    precio=t.precio,
-    disponibilidad=t.disponibilidad
-) for t in tarifas]
-
-from domain.schemas import ClienteInput
-from domain.models import ClienteDB
-
-
-@app.post("/api/clientes")
-def crear_cliente(cliente: ClienteInput):
-    try:
-        db = SessionLocal()
-        nuevo_cliente = ClienteDB(
-            nombre=cliente.nombre,
-            tipo=cliente.tipo,
-            contacto=cliente.contacto
-        )
-        db.add(nuevo_cliente)
-        db.commit()
-        db.refresh(nuevo_cliente)
-        db.close()
-        return {"estado": "ok", "cliente_id": nuevo_cliente.id}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"estado": "error", "mensaje": str(e)})
-
-from domain.schemas import PropiedadInput
-from domain.models import PropiedadDB
-
-@app.post("/api/propiedades")
-def crear_propiedad(propiedad: PropiedadInput):
-    db = SessionLocal()
-
-    nueva_propiedad = PropiedadDB(
-        cliente_id=propiedad.cliente_id,
-        nombre=propiedad.nombre,
-        tipo=propiedad.tipo,
-        ubicacion=propiedad.ubicacion
-    )
-
-    db.add(nueva_propiedad)
-    db.commit()
-    db.refresh(nueva_propiedad)
-    db.close()
-
-    return {"estado": "ok", "propiedad_id": nueva_propiedad.id}
-
-@app.get("/")
-def root():
-    return {"status": "Backend activo"}
-
-
-@app.get("/healthcheck")
-def healthcheck():
-    db = SessionLocal()
-    try:
-        count = db.query(TarifaBase).count()
-        return JSONResponse(content={"tarifa_base_count": count})
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-    
-from domain.models import Tarifa
-
-@app.get("/healthcheck/tarifas")
-def healthcheck_tarifas():
-    db = SessionLocal()
-    try:
-        count = db.query(Tarifa).count()
-        return JSONResponse(content={"tarifas_count": count})
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500) 
-    
-from domain.models import Cliente, Propiedad
-
-@app.get("/healthcheck/clientes")
-def healthcheck_clientes():
-    db = SessionLocal()
-    try:
-        count = db.query(Cliente).count()
-        return JSONResponse(content={"clientes_count": count})
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-
-@app.get("/healthcheck/propiedades")
-def healthcheck_propiedades():
-    db = SessionLocal()
-    try:
-        count = db.query(Propiedad).count()
-        return JSONResponse(content={"propiedades_count": count})
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-    
