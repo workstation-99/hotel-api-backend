@@ -8,7 +8,7 @@ Created on Thu Sep  4 10:26:05 2025
 
 from sqlalchemy import Column, Integer, Float, String, UniqueConstraint, ForeignKey
 from sqlalchemy.orm import relationship
-from infrastructure.db import Base
+from infrastructure.base import Base
 
 class Cliente(Base):
     __tablename__ = "clientes"
