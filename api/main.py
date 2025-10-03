@@ -6,7 +6,7 @@ Created on Thu Sep  4 10:29:18 2025
 """
 from typing import List
 from fastapi import FastAPI, Path, Body, Query
-from domain.models import Tarifa
+from domain.models import Tarifa, TarifaBase
 from domain.schemas import TarifaBaseDB, TarifaDB
 from use_cases.actualizar_tarifa import ActualizarTarifaUseCase
 from infrastructure.tarifa_repository import TarifaRepository
@@ -31,7 +31,7 @@ class TarifaBaseInput(BaseModel):
 @app.post("/api/tarifa_base")
 def cargar_tarifa_base(tarifa_base: TarifaBaseInput):
     db = SessionLocal()
-    existente = db.query(TarifaBaseDB).filter_by(propiedad_id=tarifa_base.propiedad_id).first()
+    existente = db.query(TarifaBase).filter_by(propiedad_id=tarifa_base.propiedad_id).first()
 
     if existente:
         existente.precio_base = tarifa_base.precio_base
@@ -55,7 +55,7 @@ def actualizar_tarifa(tarifa: Tarifa):
     db = SessionLocal()
 
     # Validación de duplicados por propiedad, categoría y fecha
-    existente = db.query(TarifaDB).filter_by(
+    existente = db.query(Tarifa).filter_by(
         propiedad_id=tarifa.propiedad_id,
         categoria_id=tarifa.categoria_id,
         fecha=tarifa.fecha
@@ -87,7 +87,7 @@ def obtener_tarifas(
     fecha: str = Query(default=None)
 ):
     db = SessionLocal()
-    query = db.query(TarifaDB)
+    query = db.query(Tarifa)
 
     if propiedad_id is not None:
         query = query.filter(TarifaDB.propiedad_id == propiedad_id)
@@ -108,7 +108,7 @@ def obtener_tarifas(
 @app.get("/tarifa_base/{propiedad_id}")
 def obtener_tarifa_base(propiedad_id: int):
     db = SessionLocal()
-    tarifa_base = db.query(TarifaBaseDB).filter_by(propiedad_id=propiedad_id).first()
+    tarifa_base = db.query(TarifaBase).filter_by(propiedad_id=propiedad_id).first()
     db.close()
 
     if tarifa_base:
@@ -126,7 +126,7 @@ def obtener_tarifa_base(propiedad_id: int):
 @app.delete("/tarifa/{id}")
 def eliminar_tarifa(id: int):
     db = SessionLocal()
-    tarifa = db.query(TarifaDB).filter_by(id=id).first()
+    tarifa = db.query(Tarifa).filter_by(id=id).first()
 
     if not tarifa:
         db.close()
@@ -147,7 +147,7 @@ def editar_tarifa(
     tarifa_actualizada: Tarifa = Body(...)
 ):
     db = SessionLocal()
-    tarifa = db.query(TarifaDB).filter_by(id=id).first()
+    tarifa = db.query(Tarifa).filter_by(id=id).first()
 
     if not tarifa:
         db.close()
@@ -156,7 +156,7 @@ def editar_tarifa(
             "mensaje": f"No se encontró tarifa con ID {id}"
         })
 
-    tarifa_base = db.query(TarifaBaseDB).filter_by(propiedad_id=tarifa_actualizada.propiedad_id).first()
+    tarifa_base = db.query(TarifaBase).filter_by(propiedad_id=tarifa_actualizada.propiedad_id).first()
     if not tarifa_base or tarifa_base.precio_base <= 0:
         db.close()
         return JSONResponse(status_code=400, content={
@@ -185,7 +185,7 @@ def editar_tarifa(
 @app.get("/resumen_tarifas/{propiedad_id}")
 def resumen_tarifas(propiedad_id: int):
     db = SessionLocal()
-    tarifas = db.query(TarifaDB).filter_by(propiedad_id=propiedad_id).all()
+    tarifas = db.query(Tarifa).filter_by(propiedad_id=propiedad_id).all()
     db.close()
 
     if not tarifas:
@@ -314,7 +314,7 @@ def root():
 def healthcheck():
     db = SessionLocal()
     try:
-        count = db.query(TarifaBaseDB).count()
+        count = db.query(TarifaBase).count()
         return JSONResponse(content={"tarifa_base_count": count})
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
