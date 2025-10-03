@@ -101,6 +101,7 @@ def obtener_tarifas(
 
     return tarifas  # FastAPI convierte automáticamente usando TarifaOut
 
+
 @app.get("/tarifa_base/{propiedad_id}")
 def obtener_tarifa_base(propiedad_id: int):
     db = SessionLocal()
