@@ -327,4 +327,25 @@ def healthcheck_tarifas():
         count = db.query(Tarifa).count()
         return JSONResponse(content={"tarifas_count": count})
     except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)    
+        return JSONResponse(content={"error": str(e)}, status_code=500) 
+    
+from domain.models import Cliente, Propiedad
+
+@app.get("/healthcheck/clientes")
+def healthcheck_clientes():
+    db = SessionLocal()
+    try:
+        count = db.query(Cliente).count()
+        return JSONResponse(content={"clientes_count": count})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.get("/healthcheck/propiedades")
+def healthcheck_propiedades():
+    db = SessionLocal()
+    try:
+        count = db.query(Propiedad).count()
+        return JSONResponse(content={"propiedades_count": count})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+    
