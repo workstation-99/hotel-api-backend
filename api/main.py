@@ -14,7 +14,7 @@ from infrastructure.db import SessionLocal
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from domain.schemas import ResumenCategoria
-
+from domain.schemas import TarifaOut
 
 app = FastAPI()
 
@@ -79,7 +79,8 @@ def actualizar_tarifa(tarifa: Tarifa):
     except ValueError as e:
         return JSONResponse(status_code=400, content={"estado": "error", "mensaje": str(e)})
 
-@app.get("/tarifas")
+
+@app.get("/tarifas", response_model=List[TarifaOut])
 def obtener_tarifas(
     propiedad_id: int = Query(default=None),
     categoria_id: int = Query(default=None),
@@ -89,20 +90,16 @@ def obtener_tarifas(
     query = db.query(Tarifa)
 
     if propiedad_id is not None:
-        query = query.filter(TarifaDB.propiedad_id == propiedad_id)
+        query = query.filter(Tarifa.propiedad_id == propiedad_id)
     if categoria_id is not None:
-        query = query.filter(TarifaDB.categoria_id == categoria_id)
+        query = query.filter(Tarifa.categoria_id == categoria_id)
     if fecha is not None:
-        query = query.filter(TarifaDB.fecha == fecha)
+        query = query.filter(Tarifa.fecha == fecha)
 
     tarifas = query.all()
     db.close()
 
-    resultado = [t.__dict__ for t in tarifas]
-    for r in resultado:
-        r.pop("_sa_instance_state", None)
-
-    return JSONResponse(content=resultado)
+    return tarifas  # FastAPI convierte automáticamente usando TarifaOut
 
 @app.get("/tarifa_base/{propiedad_id}")
 def obtener_tarifa_base(propiedad_id: int):

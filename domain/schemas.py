@@ -44,5 +44,19 @@ class PropiedadInput(BaseModel):
     cliente_id: int
     nombre: str
     tipo: str
-    ubicacion: str    
+    ubicacion: str  
+    
+from pydantic import BaseModel
+from datetime import date
+
+class TarifaOut(BaseModel):
+    id: int
+    propiedad_id: int
+    categoria_id: int
+    fecha: str  # o date si usás Date en SQLAlchemy
+    precio: float
+    disponibilidad: int
+
+    class Config:
+        orm_mode = True    
     
