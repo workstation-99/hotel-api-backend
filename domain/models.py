@@ -6,7 +6,7 @@ Created on Thu Sep  4 10:26:05 2025
 """
 
 
-from sqlalchemy import Column, Integer, Float, String, UniqueConstraint, ForeignKey
+from sqlalchemy import Column, Integer, Float, String, UniqueConstraint, ForeignKey, Date
 from sqlalchemy.orm import relationship
 from infrastructure.base import Base
 
@@ -43,3 +43,24 @@ class TarifaBase(Base):
     id = Column(Integer, primary_key=True, index=True)
     propiedad_id = Column(Integer, unique=True)
     precio_base = Column(Float)
+    
+    from sqlalchemy import Column, Integer, Float, Date
+    from infrastructure.base import Base
+
+    class TarifaBaseDB(Base):
+        __tablename__ = "tarifa_base"
+
+        id = Column(Integer, primary_key=True, index=True)
+        propiedad_id = Column(Integer, index=True)
+        categoria_id = Column(Integer, index=True)
+        fecha = Column(Date)
+
+    class TarifaDB(Base):
+        __tablename__ = "tarifa"
+
+        id = Column(Integer, primary_key=True, index=True)
+        propiedad_id = Column(Integer, index=True)
+        categoria_id = Column(Integer, index=True)
+        fecha = Column(Date)
+        precio = Column(Float)
+        disponibilidad = Column(Integer)    
