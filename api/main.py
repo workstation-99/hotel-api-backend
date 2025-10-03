@@ -6,7 +6,8 @@ Created on Thu Sep  4 10:29:18 2025
 """
 from typing import List
 from fastapi import FastAPI, Path, Body, Query
-from domain.models import Tarifa, TarifaBaseDB, TarifaDB
+from domain.models import Tarifa
+from domain.schemas import TarifaBaseDB, TarifaDB
 from use_cases.actualizar_tarifa import ActualizarTarifaUseCase
 from infrastructure.tarifa_repository import TarifaRepository
 from infrastructure.portal_gateway import PortalGateway
