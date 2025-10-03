@@ -47,20 +47,20 @@ class TarifaBase(Base):
     from sqlalchemy import Column, Integer, Float, Date
     from infrastructure.base import Base
 
-    class TarifaBaseDB(Base):
-        __tablename__ = "tarifa_base"
+class TarifaBaseDB(Base):
+    __tablename__ = "tarifa_base"
 
-        id = Column(Integer, primary_key=True, index=True)
-        propiedad_id = Column(Integer, index=True)
-        categoria_id = Column(Integer, index=True)
-        fecha = Column(Date)
+    id = Column(Integer, primary_key=True, index=True)
+    propiedad_id = Column(Integer, index=True)
+    categoria_id = Column(Integer, index=True)
+    fecha = Column(Date)
 
-    class TarifaDB(Base):
-        __tablename__ = "tarifa"
+class TarifaDB(Base):
+    __tablename__ = "tarifa"
 
-        id = Column(Integer, primary_key=True, index=True)
-        propiedad_id = Column(Integer, index=True)
-        categoria_id = Column(Integer, index=True)
-        fecha = Column(Date)
-        precio = Column(Float)
-        disponibilidad = Column(Integer)    
+    id = Column(Integer, primary_key=True, index=True)
+    propiedad_id = Column(Integer, index=True)
+    categoria_id = Column(Integer, index=True)
+    fecha = Column(Date)
+    precio = Column(Float)
+    disponibilidad = Column(Integer)    
