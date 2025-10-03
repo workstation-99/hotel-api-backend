@@ -317,3 +317,14 @@ def healthcheck():
         return JSONResponse(content={"tarifa_base_count": count})
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+    
+from domain.models import Tarifa
+
+@app.get("/healthcheck/tarifas")
+def healthcheck_tarifas():
+    db = SessionLocal()
+    try:
+        count = db.query(Tarifa).count()
+        return JSONResponse(content={"tarifas_count": count})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)    
