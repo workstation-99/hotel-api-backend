@@ -307,3 +307,13 @@ def crear_propiedad(propiedad: PropiedadInput):
 @app.get("/")
 def root():
     return {"status": "Backend activo"}
+
+
+@app.get("/healthcheck")
+def healthcheck():
+    db = SessionLocal()
+    try:
+        count = db.query(TarifaBaseDB).count()
+        return JSONResponse(content={"tarifa_base_count": count})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
