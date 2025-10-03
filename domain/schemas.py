@@ -47,7 +47,7 @@ class PropiedadInput(BaseModel):
     ubicacion: str    
     
 from sqlalchemy import Column, Integer, Float, Date
-from .base import Base  # o desde donde tengas tu declarative base
+from infrastructure.base import Base
 
 class TarifaBaseDB(Base):
     __tablename__ = "tarifa_base"
