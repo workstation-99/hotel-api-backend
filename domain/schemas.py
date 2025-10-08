@@ -58,7 +58,8 @@ class TarifaOut(BaseModel):
     disponibilidad: int
 
     class Config:
-        orm_mode = True    
+        from_attributes = True
+
     
 class TarifaInput(BaseModel):
     propiedad_id: int
