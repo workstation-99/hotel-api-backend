@@ -66,5 +66,11 @@ class TarifaInput(BaseModel):
     fecha: str
     precio: float
     disponibilidad: int
+    
+class TarifaBaseOut(BaseModel):
+    id: int
+    propiedad_id: int
+    precio_base: float
+    
 
 
