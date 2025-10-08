@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from typing import List
 from datetime import date
 
-from domain.models import Tarifa, TarifaBase, ClienteDB, PropiedadDB, Cliente, Propiedad
+from domain.models import Tarifa, TarifaBase, PropiedadDB, Cliente, Propiedad
 from domain.schemas import (
     TarifaInput, TarifaOut, TarifaBaseInput, TarifaBaseOut,
     ClienteInput, PropiedadInput,
@@ -65,7 +65,7 @@ def healthcheck_propiedades():
 @app.post("/api/clientes")
 def crear_cliente(cliente: ClienteInput):
     db = SessionLocal()
-    nuevo_cliente = ClienteDB(**cliente.dict())
+    nuevo_cliente = Cliente(**cliente.dict())
     db.add(nuevo_cliente)
     db.commit()
     db.refresh(nuevo_cliente)
