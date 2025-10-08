@@ -60,3 +60,11 @@ class TarifaOut(BaseModel):
     class Config:
         orm_mode = True    
     
+class TarifaInput(BaseModel):
+    propiedad_id: int
+    categoria_id: int
+    fecha: str
+    precio: float
+    disponibilidad: int
+
+
