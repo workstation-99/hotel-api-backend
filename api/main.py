@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from typing import List
 from datetime import date
 
-from domain.models import Tarifa, TarifaBase, PropiedadDB, Cliente, Propiedad
+from domain.models import Tarifa, TarifaBase, Cliente, Propiedad  
 from domain.schemas import (
     TarifaInput, TarifaOut, TarifaBaseInput, TarifaBaseOut,
     ClienteInput, PropiedadInput,
@@ -75,7 +75,7 @@ def crear_cliente(cliente: ClienteInput):
 @app.post("/api/propiedades")
 def crear_propiedad(propiedad: PropiedadInput):
     db = SessionLocal()
-    nueva_propiedad = PropiedadDB(**propiedad.dict())
+    nueva_propiedad = Propiedad(**propiedad.dict())
     db.add(nueva_propiedad)
     db.commit()
     db.refresh(nueva_propiedad)
@@ -233,3 +233,6 @@ def resumen_por_categoria(propiedad_id: int):
         )
 
     return resumen
+
+ClienteDB = Cliente
+PropiedadDB = Propiedad
