@@ -1,6 +1,5 @@
 {
-  "nombre": "Hotel Patagonia",
-  "email": "contacto@patagonia.com",
+  "nombre": "Hotel SinCorreo",
   "tipo": "hotel",
-  "contacto": "Juan Perez"
+  "contacto": "Juan Pérez"
 }

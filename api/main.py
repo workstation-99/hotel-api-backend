@@ -4,6 +4,11 @@ Created on Thu Sep  4 10:29:18 2025
 
 @author: backy
 """
+
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from app.database import get_db  # o el path correcto a tu función get_db
+from app.models import Cliente   # o el path correcto a tu modelo Cliente
 from fastapi import FastAPI, Path, Body, Query
 from fastapi.responses import JSONResponse
 from typing import List
@@ -236,3 +241,7 @@ def resumen_por_categoria(propiedad_id: int):
 
 ClienteDB = Cliente
 PropiedadDB = Propiedad
+
+@app.get("/api/clientes")
+def listar_clientes(db: Session = Depends(get_db)):
+    return db.query(Cliente).all()
