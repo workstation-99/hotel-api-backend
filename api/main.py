@@ -7,8 +7,8 @@ Created on Thu Sep  4 10:29:18 2025
 
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from app.database import get_db  # o el path correcto a tu función get_db
-from app.models import Cliente   # o el path correcto a tu modelo Cliente
+from .database import get_db
+from .models import Cliente
 from fastapi import FastAPI, Path, Body, Query
 from fastapi.responses import JSONResponse
 from typing import List
