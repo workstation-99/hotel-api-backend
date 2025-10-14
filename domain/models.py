@@ -15,7 +15,7 @@ class Cliente(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String, nullable=False)
-    email = Column(String, nullable=False)
+    email = Column(String, nullable=True)
     contacto = Column(String, nullable=False)
     tipo = Column(String, nullable=False)
     propiedades = relationship("Propiedad", back_populates="cliente")
