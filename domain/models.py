@@ -12,9 +12,12 @@ from infrastructure.base import Base
 
 class Cliente(Base):
     __tablename__ = "clientes"
+
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String, nullable=False)
     email = Column(String, nullable=False)
+    contacto = Column(String, nullable=False)
+    tipo = Column(String, nullable=False)
     propiedades = relationship("Propiedad", back_populates="cliente")
 
 class Propiedad(Base):
@@ -63,4 +66,6 @@ class TarifaDB(Base):
     categoria_id = Column(Integer, index=True)
     fecha = Column(Date)
     precio = Column(Float)
-    disponibilidad = Column(Integer)    
+    disponibilidad = Column(Integer)   
+    
+  
