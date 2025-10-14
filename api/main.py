@@ -245,3 +245,7 @@ PropiedadDB = Propiedad
 @app.get("/api/clientes")
 def listar_clientes(db: Session = Depends(get_db)):
     return db.query(Cliente).all()
+
+@app.get("/api/test")
+def test():
+    return {"estado": "ok"}
