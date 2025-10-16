@@ -249,3 +249,11 @@ def listar_clientes(db: Session = Depends(get_db)):
 @app.get("/api/test")
 def test():
     return {"estado": "ok"}
+
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/api/test")
+def test():
+    return {"estado": "ok"}
