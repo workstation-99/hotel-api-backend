@@ -261,3 +261,7 @@ app = FastAPI()
 @app.get("/api/test")
 def test():
     return {"estado": "ok"}
+
+@app.get("/")
+def root():
+    return {"message": "Backend Hotel API activo"}
