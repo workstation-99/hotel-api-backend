@@ -24,8 +24,12 @@ from use_cases.actualizar_tarifa import ActualizarTarifaUseCase
 from infrastructure.db import SessionLocal
 from infrastructure.tarifa_repository import TarifaRepository
 from infrastructure.portal_gateway import PortalGateway
+from api.cliente_router import router as cliente_router
 
 app = FastAPI()
+
+app.include_router(cliente_router, prefix="/api")
+
 
 @app.get("/")
 def root():
