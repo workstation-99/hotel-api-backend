@@ -74,4 +74,11 @@ class TarifaBaseOut(BaseModel):
     precio_base: float
     
 
+class PropiedadOut(BaseModel):
+    id: int
+    nombre: str
+    tipo: str
+    ubicacion: str
 
+    class Config:
+        orm_mode = True
