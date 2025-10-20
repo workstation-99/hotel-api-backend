@@ -8,8 +8,9 @@ Created on Mon Oct 20 11:35:25 2025
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from infrastructure.db import get_db
-from domain.models import TarifaBase, Tarifa
-from domain.schemas import TarifaBaseInput, TarifaInput
+from domain.models import Tarifa, TarifaBase, Propiedad
+from domain.schemas import TarifaInput, TarifaBaseInput, TarifaExportada
+from typing import List
 
 router = APIRouter()
 
@@ -36,3 +37,19 @@ def crear_tarifa(tarifa: TarifaInput, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nueva)
     return nueva
+
+@router.get("/tarifas-exportadas", response_model=List[TarifaExportada])
+def exportar_tarifas(db: Session = Depends(get_db)):
+    tarifas = db.query(Tarifa).join(Propiedad).all()
+    resultado = []
+
+    for tarifa in tarifas:
+        resultado.append(TarifaExportada(
+            propiedad_id=tarifa.propiedad_id,
+            categoria_id=tarifa.categoria_id,
+            fecha=tarifa.fecha,
+            precio=tarifa.precio,
+            disponibilidad=tarifa.disponibilidad
+        ))
+
+    return resultado
