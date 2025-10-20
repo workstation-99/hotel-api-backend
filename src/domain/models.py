@@ -28,14 +28,17 @@ class Propiedad(Base):
     tipo = Column(String, nullable=False)
     ubicacion = Column(String, nullable=False)
     cliente = relationship("Cliente", back_populates="propiedades")
-
+    tarifas = relationship("Tarifa", back_populates="propiedad")
+    
+    
 class Tarifa(Base):
     __tablename__ = "tarifas"
     __table_args__ = (
         UniqueConstraint("propiedad_id", "categoria_id", "fecha", name="uix_tarifa_unica"),
     )
     id = Column(Integer, primary_key=True, index=True)
-    propiedad_id = Column(Integer)
+    propiedad_id = Column(Integer, ForeignKey("propiedades.id"), nullable=False)
+    propiedad = relationship("Propiedad", back_populates="tarifas")
     categoria_id = Column(Integer)
     fecha = Column(String)
     precio = Column(Float)
@@ -47,8 +50,6 @@ class TarifaBase(Base):
     propiedad_id = Column(Integer, unique=True)
     precio_base = Column(Float)
     
-    from sqlalchemy import Column, Integer, Float, Date
-    from infrastructure.base import Base
 
 class TarifaBaseDB(Base):
     __tablename__ = "tarifa_base"
