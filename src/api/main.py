@@ -265,3 +265,6 @@ def test():
 @app.get("/")
 def root():
     return {"message": "Backend Hotel API activo"}
+
+from api.propiedad_router import router as propiedad_router
+app.include_router(propiedad_router, prefix="/api")
