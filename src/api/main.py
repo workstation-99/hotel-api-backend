@@ -26,10 +26,13 @@ from infrastructure.tarifa_repository import TarifaRepository
 from infrastructure.portal_gateway import PortalGateway
 from api.cliente_router import router as cliente_router
 
+
+from api.propiedad_router import router as propiedad_router
+from api.tarifa_router import router as tarifa_router
+
 app = FastAPI()
-
-app.include_router(cliente_router, prefix="/api")
-
+app.include_router(propiedad_router, prefix="/api")
+app.include_router(tarifa_router, prefix="/api")
 
 @app.get("/")
 def root():
@@ -266,5 +269,4 @@ def test():
 def root():
     return {"message": "Backend Hotel API activo"}
 
-from api.propiedad_router import router as propiedad_router
-app.include_router(propiedad_router, prefix="/api")
+
